@@ -1,9 +1,9 @@
 
-#CS491 Final Project 
+# CS491 Final Project 
 
 
 
-##Project Description: 
+## Project Description: 
 
     The quiz app will be a web game which would allow 2 players (or more) to connect to a quiz and play against each other.
     A game consists of multiple rounds, in each round a random movie/song will be displayed and players have to guess the year in which it was released. The questions would be of the following types:
@@ -12,7 +12,7 @@
     Each correct answer will be rewarded positive point and wrong answer will lead to negative point or zero point. The player with the most points at the end wins!
 
 
-##Functionalities:
+## Functionalities:
 
     User has to register a new account with the application. User has an option to sign up using his Facebook account.
     Once User logs in login, s/he can either join an existing game or start a new one. 
@@ -22,7 +22,7 @@
     Winner is given the option to post his score on Facebook
 
 
-##Web Dev Area list:
+## Web Dev Area list:
 
     OAUTH/SSO/API usage: Will ask for permissions - profile picture, email and publish_actions(let’s one post on FB timeline)
 
@@ -40,7 +40,7 @@
     Client-side functionality: Will use AJAX to implement state manipulations by browser. 
 
 
-##Area Implementation Ownership (will learn in depth)
+## Area Implementation Ownership (will learn in depth)
 
     Aakash Barve-
     Back end storage
