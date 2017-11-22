@@ -1,0 +1,229 @@
+<html>
+<head>
+	<title>fitt's law</title>
+	<script src='https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js'></script>
+	<style>
+		
+		.target {
+			fill: #000280;
+		}
+
+		.back {
+			fill: white;
+		}
+
+		.circ {
+			fill: #D47E7E;
+		}
+
+	</style>
+	<script>
+		var patincr=0;
+		var person;
+		var svgElem = null;
+		var sceneWidth = 600;
+		var sceneHeight = 600;
+		var cursorPosition = {x:0, y:0};
+		var samplesCollected = 0;
+		var totalSamples = 120;
+		var sessionEnded = false;
+		var samples = [];
+		var result = null;
+		var chosen = 0;
+		var targetPoint = {
+			"startTime" : null,
+			"startCursorPos" : null,
+			"targetCenter" : null,
+			"targetRadius" : null
+		};
+		var dist,resultGen;
+
+		function resultGenerator(distance, widths, repeatCount) {
+			var i = 0,condition=0;
+			var resultCache = [];
+			for (var j = 0; j < distance.length; j++) {
+				for (var k = 0; k < widths.length; k++) {
+					for (var m = 0; m < repeatCount; m++) {
+						var result = { 
+							sampleno:condition,
+							amplitude: distance[j], 
+							width    : widths[k] 
+							};
+						resultCache.push(result);
+					}
+					condition++;
+					console.log(condition)
+				}
+			}
+
+			this.restart = function() {
+				i = 0;
+			};
+
+			this.next = function() {
+				if (i >= resultCache.length) return null;
+				return resultCache[i++];
+			}
+		}
+       
+		
+		function endSession() {
+			sessionEnded = true;
+			console.log(samples);
+		}
+
+		function updateJSON() {	
+			var outputElem = document.getElementById("output");
+			var testresults = JSON.stringify(samples);
+				console.log(testresults);
+			outputElem.innerHTML = "<a href=\"data:application/json;charset=utf-8,"+encodeURIComponent(testresults)+"\" download=\""+person+"\"_result.json\">Download Results</a>";
+		
+			}	
+			
+
+		function updateNumSamples(val) {
+			var sampElem = document.getElementById("numSamples");
+			sampElem.innerHTML = "Number of Samples: " + val;
+		}
+
+		function targetClicked() {
+			if (sessionEnded) return;
+			t = Date.now() - targetPoint["startTime"];
+			
+			var sample = {
+				condition : result.sampleno,
+				time : t,
+				amplitude : result.amplitude,
+				width: result.width 
+			};
+			samples.push(sample);
+			samplesCollected += 1;
+			console.log("Samples number: " + (totalSamples));
+
+			updateNumSamples(samplesCollected);
+			updateJSON();
+
+			genCircles();
+		}
+
+		function restart() {
+			resultGen.restart();
+			samples = [];
+			samplesCollected = 0;
+			updateNumSamples(0);
+			renderStart();
+		}
+
+		function targetMissed() {
+			if (sessionEnded) return;
+			console.log("Oops! Try again");
+		}
+
+		function randomInt(max) {
+			return Math.floor(Math.random() * max);
+		}
+
+		function randomFloat(min, max) {
+			return Math.random() * (max - min) + min;
+		}
+
+		function renderStart() {
+			var ox = sceneWidth / 2;
+			var oy = sceneHeight / 2;
+			var output = "<circle onclick='getName()' style='fill:pink' cx='" + ox + "' cy='"+oy+"' r='40'></circle>"
+			output += "<text onclick='getName()' x='"+ox+"' y='"+oy+"' dominant-baseline='middle' text-anchor='middle' font-size='12' font-weight='bold' font-family='Arial' fill='wheat'>START TEST</text>";
+			svgElem.innerHTML = output;
+		}
+
+function getName()
+{
+	 person = prompt("Please enter your name");
+					
+                  if (person != null) {
+					  console.log(patincr++);
+					  if(patincr==3)
+				     patincr=0;
+
+					 if(patincr==0)
+					 resultGen = new resultGenerator([ 380, 450,100],[15,60] , 20);
+		
+					else if(patincr==1)
+					resultGen = new resultGenerator([100, 380, 450],[60,15] , 20);
+		
+					else
+					resultGen = new resultGenerator([450,100, 380],[15,60] , 20);
+					
+                      genCircles();
+				  }
+				  
+}
+		function genCircles() {
+		 	console.log("genCircles();")
+			result = resultGen.next();
+			console.log("result:");
+			console.log(result);
+
+			var output = "";
+			if (result) {
+				var radius = result.width / 2;
+				var ringRadius = result.amplitude / 2;
+				var numCircles = 15;
+				var targetCenter = { x : 0, y : 0 };
+				chosen = (chosen + Math.floor(numCircles / 2)) % numCircles;
+				output += "<rect class='back' onclick='targetMissed()' x='0' y='0' width='640' height='480'></rect>";
+				for (var i = 0; i <= numCircles; i++) {
+					if (i == chosen) continue;
+					if (i == numCircles) i = chosen;
+					var ox = sceneWidth / 2;
+					var oy = sceneHeight / 2;
+					var theta = i * Math.PI * 2 / numCircles;
+					var cx = Math.sin(theta) * ringRadius + ox;
+					var cy = Math.cos(theta) * ringRadius + oy;
+					if (i != chosen % numCircles)
+						output += "<circle class='circ' cx='" + cx + "' cy='" +cy+ "' r='"+radius+"'></circle>"; 
+					else {
+						output += "<circle class='target' onclick='targetClicked()' cx='" + cx + "' cy='" +cy+ "' r='"+radius+"'></circle>"; 
+						targetCenter.x = cx;
+						targetCenter.y = cy;
+						break;
+					}
+				}
+			}
+
+			targetPoint["startTime"] = Date.now();
+			svgElem.innerHTML = output;
+		}
+
+		function hookEvents() {
+			svgElem = document.getElementById("scene");
+			svgElem.addEventListener("mousemove", function (evt) {
+				cursorPosition.x = evt.clientX;
+				cursorPosition.y = evt.clientY;
+			});
+		}
+
+		function main() {
+			hookEvents();
+			renderStart();
+			console.log("Circles generated");
+		}
+		
+	</script>
+</head>
+<body onload="main()">
+	<h1 style="text-align: center; text-decoration: underline;">Fitts's Law Replication</h1>
+	<br>
+	<center>
+		<svg id="scene" width="600" height="600" style="pointer-events: all;">
+		</svg>
+		<br />
+		<span id="numSamples">Number of Samples: 0</span>
+		&nbsp;
+		<button onclick='restart()'>Restart</button>
+		<br />
+		<span id="output">
+				</span>
+	</center>
+	
+</body>
+</html>
